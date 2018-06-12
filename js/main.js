@@ -3,6 +3,23 @@ let restaurants,
   cuisines
 var map
 var markers = []
+var map_key = 'AIzaSyDypRsSfijcKfcaV5s8EXs8ufB2f4NfcHo'
+var map_url='https://maps.googleapis.com/maps/api/js?key='+map_key+'&libraries=places&callback=initMap'
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+
+    navigator.serviceWorker.register('/sw.js').then(function(registration){
+      console.log("Service Worker registration successfull with scope", registration.scope);
+    },function(err){
+      console.log(err);
+    })
+  })
+}
+
+
+
+
+
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
@@ -138,14 +155,42 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
 createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
 
-  const image = document.createElement('img');
-  image.className = 'restaurant-img';
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  li.append(image);
-
   const name = document.createElement('h1');
   name.innerHTML = restaurant.name;
   li.append(name);
+
+  const image = document.createElement('img');
+  image.className = 'restaurant-img';
+  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.alt="Restaurant";
+  // li.append(image);
+
+  const picture = document.createElement('picture');
+  let source1 = document.createElement('source');
+  source1.media="(max-width:320px)";
+  let imgName = DBHelper.imageUrlForRestaurant(restaurant);
+  imgName = imgName.substring(imgName.lastIndexOf('\/')+1,imgName.indexOf('.'));
+  source1.srcset=`images/${imgName}-280.jpg`;
+  picture.append(source1);
+
+  let source2 = document.createElement('source');
+  source2.media="(min-width:320px) and (max-width:550px)";
+  source2.srcset=`images/${imgName}-380.jpg`;
+  picture.append(source2);
+
+  let source3 = document.createElement('source');
+  source3.media="(min-width:551px) and (max-width:900px)";
+  source3.srcset=`images/${imgName}-500.jpg`;
+  picture.append(source3);
+
+  let source4 = document.createElement('source');
+  source4.media="(min-width:901px)";
+  source4.srcset=`images/${imgName}-680.jpg`;
+  picture.append(source4);
+
+  picture.append(image)
+  li.append(picture);
+
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
@@ -158,6 +203,7 @@ createRestaurantHTML = (restaurant) => {
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
+  more.title="View Details";
   li.append(more)
 
   return li

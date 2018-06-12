@@ -55,9 +55,42 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
-  const image = document.getElementById('restaurant-img');
+  const imageDiv = document.getElementById('restaurant-img');
+
+  //image.src = DBHelper.imageUrlForRestaurant(restaurant);
+
+
+  const picture = document.createElement('picture');
+  let source1 = document.createElement('source');
+  source1.media="(max-width:320px)";
+  let imgName = DBHelper.imageUrlForRestaurant(restaurant);
+  imgName = imgName.substring(imgName.lastIndexOf('\/')+1,imgName.indexOf('.'));
+  source1.srcset=`images/${imgName}-280.jpg`;
+  picture.append(source1);
+
+  let source2 = document.createElement('source');
+  source2.media="(min-width:320px) and (max-width:550px)";
+  source2.srcset=`images/${imgName}-380.jpg`;
+  picture.append(source2);
+
+  let source3 = document.createElement('source');
+  source3.media="(min-width:551px) and (max-width:900px)";
+  source3.srcset=`images/${imgName}-500.jpg`;
+  picture.append(source3);
+
+  let source4 = document.createElement('source');
+  source4.media="(min-width:901px)";
+  source4.srcset=`images/${imgName}-680.jpg`;
+  picture.append(source4);
+
+  let image = document.createElement('img');
   image.className = 'restaurant-img'
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.src = `images/${imgName}.jpg`;
+  image.alt="Restaurant";
+  picture.append(image)
+
+  imageDiv.append(picture);
+
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
