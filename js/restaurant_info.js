@@ -86,7 +86,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   let image = document.createElement('img');
   image.className = 'restaurant-img'
   image.src = `images/${imgName}.jpg`;
-  image.alt="Restaurant";
+  image.alt = restaurant.name + " - Restaurant";
   picture.append(image)
 
   imageDiv.append(picture);

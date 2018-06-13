@@ -6,7 +6,6 @@ var markers = []
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-
     navigator.serviceWorker.register('/sw.js').then(function(registration){
       console.log("Service Worker registration successfull with scope", registration.scope);
     },function(err){
@@ -14,11 +13,6 @@ if('serviceWorker' in navigator){
     })
   })
 }
-
-
-
-
-
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
@@ -161,7 +155,7 @@ createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   image.className = 'restaurant-img';
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
-  image.alt="Restaurant";
+  image.alt = restaurant.name +"- Restaurant";
   // li.append(image);
 
   const picture = document.createElement('picture');
@@ -202,7 +196,7 @@ createRestaurantHTML = (restaurant) => {
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  more.title="View Details";
+  more.title = restaurant.name + "restuarant's - View Details";
   li.append(more)
 
   return li
