@@ -3,8 +3,7 @@ let restaurants,
   cuisines
 var map
 var markers = []
-var map_key = 'AIzaSyDypRsSfijcKfcaV5s8EXs8ufB2f4NfcHo'
-var map_url='https://maps.googleapis.com/maps/api/js?key='+map_key+'&libraries=places&callback=initMap'
+
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
 
