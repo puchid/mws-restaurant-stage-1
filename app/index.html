@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <meta charset="utf-8">
@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/rwd.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin=""/>
+  <meta name="theme-color" content="#fdfdfd">
+  <link rel="manifest" href="/manifest.json">
   <title>Restaurant Reviews</title>
 </head>
 
@@ -18,16 +20,16 @@
   </header>
 
   <main id="maincontent">
-    <section id="map-container" role="search" aria-describedby="Search restuarants by navigating over map" aria-labelledby="Map">
+    <section id="map-container" role="application" aria-describedby="Search restuarants by navigating over map" aria-labelledby="Map">
       <div id="map"></div>
     </section>
     <section>
       <div class="filter-options">
         <h2>Filter Results</h2>
-        <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
+        <select id="neighborhoods-select" name="neighborhoods" title="Select Neighborhoods" onchange="updateRestaurants()">
           <option value="all">All Neighborhoods</option>
         </select>
-        <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()">
+        <select id="cuisines-select" name="cuisines" title="Select Cuisines" onchange="updateRestaurants()">
           <option value="all">All Cuisines</option>
         </select>
       </div>
@@ -35,8 +37,12 @@
     </section>
   </main>
   <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script>
-  <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
-  <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
+  <!-- <script src="bundle.js"></script> -->
+<script type="application/javascript" charset="utf-8" src="js/idb.js"></script>
+<script type="application/javascript" charset="utf-8" src="js/register.js"></script>
+<script type="application/javascript" charset="utf-8" src="js/main.js"></script>
+<script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
+
   <!--<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDypRsSfijcKfcaV5s8EXs8ufB2f4NfcHo&libraries=places&callback=initMap"></script>-->
 
 

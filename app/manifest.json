@@ -1,0 +1,14 @@
+{
+  "short_name": "Dine-in Reviews",
+  "name": "Restaurant Reviews",
+  "icons": [
+    { "src": "icons/restaurant-50.png", "type": "image/png", "sizes": "50x50" },
+    { "src": "icons/restaurant-100.png", "type": "image/png", "sizes": "100x100"},
+    { "src": "icons/restaurant-192.png", "type": "image/png", "sizes": "192x192"},
+    { "src": "icons/restaurant-512.png", "type": "image/png", "sizes": "512x512"}
+  ],
+  "start_url": "index.html",
+  "background_color": "#fdfdfd",
+  "theme_color": "#fdfdfd",
+  "display": "fullscreen"
+}

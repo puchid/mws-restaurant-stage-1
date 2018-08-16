@@ -1,23 +1,45 @@
-let restaurant;
+var restaurant;
 var newMap;
 
 /**
  * Initialize map as soon as the page is loaded.
  */
-document.addEventListener('DOMContentLoaded', (event) => {  
-  initMap();
+document.addEventListener('DOMContentLoaded', (event) => {
+  fetchRestaurantFromURL();
 });
 
+
+/**
+ * Get current restaurant from page URL.
+ */
+fetchRestaurantFromURL = () => {
+  // if (self.restaurant) { // restaurant already fetched!
+  //   return (self.restaurant);
+  // }
+  const id = getParameterByName('id');
+  if (!id) { // no id found in URL
+    error = 'No restaurant id in URL'
+    console.log(error);
+  } else {
+    DBHelper.fetchRestaurantById(id)
+      .then(restaurant =>{
+        self.restaurant = restaurant;
+        //console.log(self.restaurant);
+        initMap();
+        fillRestaurantHTML();
+      //callback(null, restaurant)
+    }).catch((err)=>console.log(err));
+  }
+}
 /**
  * Initialize leaflet map
  */
 initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {      
+  //fetchRestaurantFromURL((restaurant) => {
+  let lat = self.restaurant.latlng.lat;
+  let lng = self.restaurant.latlng.lng;
       self.newMap = L.map('map', {
-        center: [restaurant.latlng.lat, restaurant.latlng.lng],
+        center: [lat,lng],
         zoom: 16,
         scrollWheelZoom: false
       });
@@ -27,14 +49,13 @@ initMap = () => {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
           '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
           'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-        id: 'mapbox.streets'    
+        id: 'mapbox.streets'
       }).addTo(newMap);
       fillBreadcrumb();
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.newMap);
-    }
-  });
-}  
- 
+//  });
+}
+
 /* window.initMap = () => {
   fetchRestaurantFromURL((error, restaurant) => {
     if (error) { // Got an error!
@@ -51,30 +72,6 @@ initMap = () => {
   });
 } */
 
-/**
- * Get current restaurant from page URL.
- */
-fetchRestaurantFromURL = (callback) => {
-  if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant)
-    return;
-  }
-  const id = getParameterByName('id');
-  if (!id) { // no id found in URL
-    error = 'No restaurant id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant)
-    });
-  }
-}
 
 /**
  * Create restaurant HTML and add it to the webpage
@@ -89,13 +86,14 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const imageDiv = document.getElementById('restaurant-img');
 
   //image.src = DBHelper.imageUrlForRestaurant(restaurant);
-
+  let imgName = restaurant.photograph;
+  //let imgName = DBHelper.imageUrlForRestaurant(restaurant);
+  //imgName = imgName.substring(imgName.lastIndexOf('\/')+1,imgName.indexOf('.'));
 
   const picture = document.createElement('picture');
+
   let source1 = document.createElement('source');
   source1.media="(max-width:320px)";
-  let imgName = DBHelper.imageUrlForRestaurant(restaurant);
-  imgName = imgName.substring(imgName.lastIndexOf('\/')+1,imgName.indexOf('.'));
   source1.srcset=`images/${imgName}-280.jpg`;
   picture.append(source1);
 
