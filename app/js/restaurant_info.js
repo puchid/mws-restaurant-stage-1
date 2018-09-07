@@ -1,5 +1,74 @@
 var restaurant;
 var newMap;
+var reviews;
+
+
+const form = document.createElement('form');
+  form.setAttribute('name','addReview');
+  form.setAttribute('id','addReview');
+  //form.setAttribute('action',DBHelper.REVIEW_URL);
+  form.setAttribute('method','post');
+
+  const namelabel = document.createElement('label');
+  namelabel.setAttribute('for','name');
+  namelabel.innerHTML='Name';
+
+  const nameip = document.createElement('input');
+  nameip.setAttribute('type','text');
+  nameip.setAttribute('name','name');
+  nameip.setAttribute('id','name');
+  nameip.setAttribute('value','');
+
+  const ratelabel = document.createElement('label');
+  ratelabel.setAttribute('for','rate');
+  ratelabel.innerHTML='Rate';
+
+  const rateip = document.createElement('input');
+  rateip.setAttribute('type','text');
+  rateip.setAttribute('name','rate');
+  rateip.setAttribute('id','rate');
+  rateip.setAttribute('value','');
+
+  const commentslabel = document.createElement('label');
+  commentslabel.setAttribute('for','comments');
+  commentslabel.innerHTML='Comments';
+
+  const commentsip = document.createElement('textarea');
+  commentsip.setAttribute('cols',20);
+  commentsip.setAttribute('rows',4);
+  commentsip.setAttribute('id','comments');
+  commentsip.setAttribute('value','');
+
+  const submitBtn = document.createElement('button');
+  submitBtn.innerHTML='Submit';
+  submitBtn.addEventListener('click',function(e){
+    e.preventDefault();
+    let id = self.restaurant.id;
+    let name = document.getElementById('name').value;
+    let rate = document.getElementById('rate').value;
+    let comments = document.getElementById('comments').value;
+    var reqObj = {
+      'restaurant_id':id,
+      'name':name,
+      'rating':rate,
+      'comments':comments
+    };
+    console.log('new post..',reqObj);
+    DBHelper.fetchPostReview(reqObj)
+    .then(response=> {review=response; createReviewHTML(review);})
+    .catch(err => console.log(err));
+  });
+
+  form.appendChild(namelabel);
+  form.appendChild(nameip);
+
+  form.appendChild(ratelabel);
+  form.appendChild(rateip);
+
+  form.appendChild(commentslabel);
+  form.appendChild(commentsip);
+  form.appendChild(submitBtn);
+
 
 /**
  * Initialize map as soon as the page is loaded.
@@ -155,23 +224,36 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (id=self.restaurant.id) => { 
+  DBHelper.fetchReviews(id)
+  .then(response => {
+    const reviews = response;
+      if (!reviews) {
+      const noReviews = document.createElement('p');
+      noReviews.innerHTML = 'No reviews yet!';
+      container.appendChild(noReviews);
+      return;
+    }
+    const ul = document.getElementById('reviews-list');
+    reviews.forEach(review => {
+      ul.appendChild(createReviewHTML(review));
+    });
+    container.appendChild(ul);
+  }).catch(err => console.error(err));
+  
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h2');
   title.innerHTML = 'Reviews';
   container.appendChild(title);
 
-  if (!reviews) {
-    const noReviews = document.createElement('p');
-    noReviews.innerHTML = 'No reviews yet!';
-    container.appendChild(noReviews);
-    return;
-  }
-  const ul = document.getElementById('reviews-list');
-  reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
+  const addReview = document.createElement('button');
+  addReview.innerHTML = 'Add Review';
+  addReview.addEventListener('click',function(e){
+      event.preventDefault();
+    container.insertBefore(form,document.querySelector('#reviews-list'));
+    container.removeChild(addReview);
   });
-  container.appendChild(ul);
+  container.appendChild(addReview);
 }
 
 /**
@@ -184,7 +266,7 @@ createReviewHTML = (review) => {
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = review.date;
+  date.innerHTML = review.createdAt;
   li.appendChild(date);
 
   const rating = document.createElement('p');

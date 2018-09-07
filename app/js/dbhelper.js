@@ -7,15 +7,22 @@ class DBHelper {
    * Database URL.
    * Change this to restaurants.json file location on your server.
    */
+
   static get DATABASE_URL() {
-    let port = 1337 // Change this to your server port
+    let port = 1337; // Change this to your server port
     return `http://localhost:${port}/restaurants`;
   }
 
-  static get DBBY_ID(){
-    let port = 1337;
+  static get RESTAURANT_BY_ID(){
+    let port = 1337; // Change this to your server port
     return `http://localhost:${port}/restaurants?id=`;
   }
+
+  static get REVIEW_URL(){
+    let port = 1337; // Change this to your server port
+    return `http://localhost:${port}/reviews/?restaurant_id=`;
+  }
+
 
   /**
    * Fetch all restaurants.
@@ -38,13 +45,34 @@ class DBHelper {
    */
   static fetchRestaurantById(id) {
   // fetch all restaurants with proper error handling.
-    return fetch(DBHelper.DBBY_ID+id).then((response) => {
+    return fetch(DBHelper.RESTAURANT_BY_ID+id).then((response) => {
         const restaurant = response.json();
         return (restaurant);
       }).catch((err) => { // Restaurant does not exist in the database
           console.log('Restaurant does not exist', err);
       });
   }
+
+
+  // Fetch all reviews
+  static fetchReviews(restaurantId){
+    return fetch(DBHelper.REVIEW_URL+restaurantId).then(response => {
+      const reviews = response.json();
+      return reviews;
+    }).catch((err) => {
+      console.log('Reviews does not exist');
+    });
+  }
+
+static fetchPostReview(data){
+  return fetch('http://localhost:1337/reviews/',{
+    method:'post',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body: JSON.stringify(data)
+  }).then(response => response.json())
+  .catch(err => console.log(err));
+}
+
 
   /**
    * Fetch restaurants by a cuisine type with proper error handling.
