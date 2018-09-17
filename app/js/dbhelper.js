@@ -37,8 +37,7 @@ class DBHelper {
 static fetchUpdateFavorite(id,isFav)
 { let url = DBHelper.FAVORITE_URL+id+'/?is_favorite='+isFav;
   console.log(id,isFav,url);
-  var headers = {'content-length':6,'content-type':'text/plain'};
-  return fetch(url,{method:'PUT',headers})
+  return fetch(url,{method:'PUT'})
   .then(response =>{
     if(response.ok)
     {

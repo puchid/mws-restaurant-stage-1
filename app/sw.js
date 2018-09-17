@@ -104,7 +104,7 @@ self.addEventListener('fetch', function(event) {
         if (response) {
           return response;
         }
-        else if((event.request.method==='PUT') && (req.url.indexOf('/restaurants/')>=0) && (req.url.indexOf('?is_favorite')>=0)){
+        else if((event.request.method==='PUT') && (event.request.url.indexOf('/restaurants/')>=0) && (event.request.url.indexOf('?is_favorite')>=0)){
           let req = event.request;
           if(navigator.onLine)
           {
@@ -121,28 +121,22 @@ self.addEventListener('fetch', function(event) {
               }).then(content => {
                   let tx = _db.transaction(DB_STORE,"readwrite");
                   let str = tx.objectStore(DB_STORE);
+                  let val = req.url.split('/')[5].substring(13);
                   let obj = str.get(id);
-                  // obj.onsuccess = function(){
-                  //   let resultObj = obj.result;
-                  //   resultObj['is_favorite']=req.url.split('/')[5].substring(13);
-                  //   str.put(resultObj);
-                  //   //str.put(content);
-                  //   tx.complete;
-                  //   return resultObj;
-                  // }
-
-                  obj.then(obj => {
+                  obj.onsuccess = function(e){
                     let resultObj = obj.result;
-                      resultObj['is_favorite']=req.url.split('/')[5].substring(13);
-                      str.put(resultObj);
-                      //str.put(content);
-                      tx.complete;
-                      return resultObj;
-                  }).then(content => new Response(JSON.stringify(content)));
-                }).catch(err =>  new Response("not connected...", {status: 404}));
-          }
+                    return resultObj;
+                  }
+                  obj.then(resObj =>{
+                  resObj['is_favorite']= val;
+                  str.put(resObj);
+                  return resObj;
+                }).then(obj => {
+                  return new Response(JSON.stringify(obj));
+                });
+              }).catch(err =>  new Response("not connected...", {status: 404}));
         }
-        else if((event.request.method==='POST') && (event.request.url.indexOf('/reviews/')>=0))
+      }else if((event.request.method==='POST') && (event.request.url.indexOf('/reviews/')>=0))
             {
               let req = event.request;  //console.log('req json....',req.json());
               if(navigator.onLine){
