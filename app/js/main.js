@@ -3,7 +3,8 @@ let restaurants,
   cuisines
 var newMap
 var markers = []
-
+const farClass = 'favorite far fa-heart fa-2x';
+const fasClass = 'favorite fas fa-heart fa-2x';
 /**
  * Initialize leaflet map, called from HTML.
  */
@@ -150,10 +151,39 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
  */
 createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
-
   const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   li.append(name);
+  const favIcon = document.createElement('input');
+  favIcon.setAttribute('type','checkbox');
+  favIcon.setAttribute('name','favorite');
+  //favIcon.setAttribute('id','favorite');
+  if(restaurant['is_favorite']==='true'){
+    favIcon.setAttribute('class',fasClass);
+  }else{
+    favIcon.setAttribute('class',farClass);
+  }
+
+  favIcon.addEventListener('click',function(e){
+    var cs = e.target.getAttribute('class');
+    var restaurantId = restaurant.id;
+    var isFav;
+    if(cs.indexOf('fas')>=0){
+        e.target.setAttribute('class','favorite fa-heart fa-2x far');
+        isFav='false';
+    }else {
+        e.target.setAttribute('class','favorite fa-heart fa-2x fas');
+        isFav='true';
+    }
+    DBHelper.fetchUpdateFavorite(restaurantId,isFav).then(response =>{
+        //self.restaurant = response;
+        //fillRestaurantHTML();
+        updateRestaurants();
+    }).catch(err => console.log(err));
+  })
+  li.append(favIcon);
+
+
 
   //let imgName = DBHelper.imageUrlForRestaurant(restaurant);
   //imgName = imgName.substring(imgName.lastIndexOf('\/')+1,imgName.indexOf('.'));

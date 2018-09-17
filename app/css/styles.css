@@ -273,3 +273,9 @@ nav h1 a {
 #restaurant-hours td {
   color: #666;
 }
+#addReview label{display: block;}
+#addReview input[type='text']{border-radius:5px; height:30px;margin-bottom:6px;display:block;width:100%;}
+#addReview input[type='number']{border-radius:5px; height:30px;margin-bottom:6px;display:block;width:100%;}
+#addReview textarea{border-radius:5px;width:100%;}
+#addReview button{border-radius:5px;padding:10px 20px;margin-bottom:25px;}
+.favorite{position: absolute;color: red;}

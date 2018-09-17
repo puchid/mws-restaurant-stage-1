@@ -18,19 +18,48 @@ class DBHelper {
     return `http://localhost:${port}/restaurants?id=`;
   }
 
-  static get REVIEW_URL(){
+  static get REVIEW_FOR_RESTAURANT_URL(){
     let port = 1337; // Change this to your server port
     return `http://localhost:${port}/reviews/?restaurant_id=`;
   }
+
+  static get REVIEW_URL(){
+    let port = 1337; // Change this to your server port
+    return `http://localhost:${port}/reviews/`;
+  }
+
+    static get FAVORITE_URL(){
+      let port = 1337; // Change this to your server port
+      return `http://localhost:${port}/restaurants/`;
+    }
+
+
+static fetchUpdateFavorite(id,isFav)
+{ let url = DBHelper.FAVORITE_URL+id+'/?is_favorite='+isFav;
+  console.log(id,isFav,url);
+  var headers = {'content-length':6,'content-type':'text/plain'};
+  return fetch(url,{method:'PUT',headers})
+  .then(response =>{
+    if(response.ok)
+    {
+      let result = response.json();
+      return result;
+    }
+  }).then(result => result)
+  .catch(err => console.log(err));
+}
 
 
   /**
    * Fetch all restaurants.
    */
    static fetchRestaurants(){
-    return fetch(DBHelper.DATABASE_URL)
-    .then((response) => {
-      return response.json();
+    return fetch(DBHelper.DATABASE_URL).then(response => {
+      if(response.ok)
+      {
+        let res = response.json();
+        return res;
+      }
     }).then(respArr => {
       respArr.forEach(res => {
         if(res.name=='Casa Enrique'){
@@ -45,10 +74,14 @@ class DBHelper {
    */
   static fetchRestaurantById(id) {
   // fetch all restaurants with proper error handling.
-    return fetch(DBHelper.RESTAURANT_BY_ID+id).then((response) => {
-        const restaurant = response.json();
-        return (restaurant);
-      }).catch((err) => { // Restaurant does not exist in the database
+    return fetch(DBHelper.RESTAURANT_BY_ID+id).then(response => {
+        if(response.ok)
+        {
+          const restaurant = response.json();
+          return (restaurant);
+        }
+      }).then(restaurant => restaurant)
+      .catch(err => { // Restaurant does not exist in the database
           console.log('Restaurant does not exist', err);
       });
   }
@@ -56,20 +89,26 @@ class DBHelper {
 
   // Fetch all reviews
   static fetchReviews(restaurantId){
-    return fetch(DBHelper.REVIEW_URL+restaurantId).then(response => {
-      const reviews = response.json();
-      return reviews;
-    }).catch((err) => {
+    return fetch(DBHelper.REVIEW_FOR_RESTAURANT_URL+restaurantId).then(response => {
+      if(response.ok){
+        const reviews = response.json();
+        return reviews;
+      }
+    }).then(reviews => reviews)
+    .catch((err) => {
       console.log('Reviews does not exist');
     });
   }
 
 static fetchPostReview(data){
   return fetch('http://localhost:1337/reviews/',{
-    method:'post',
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    method:'POST',
+    headers:{'content-type':'application/json'},
     body: JSON.stringify(data)
-  }).then(response => response.json())
+  }).then(response => {
+    var result = response.json();
+    return result;
+  }).then(result => result)
   .catch(err => console.log(err));
 }
 

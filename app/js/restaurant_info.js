@@ -1,7 +1,8 @@
 var restaurant;
 var newMap;
 var reviews;
-
+const farClass = 'favorite far fa-heart fa-2x';
+const fasClass = 'favorite fas fa-heart fa-2x';
 
 const form = document.createElement('form');
   form.setAttribute('name','addReview');
@@ -17,6 +18,7 @@ const form = document.createElement('form');
   nameip.setAttribute('type','text');
   nameip.setAttribute('name','name');
   nameip.setAttribute('id','name');
+  nameip.setAttribute('required','');
   nameip.setAttribute('value','');
 
   const ratelabel = document.createElement('label');
@@ -24,9 +26,12 @@ const form = document.createElement('form');
   ratelabel.innerHTML='Rate';
 
   const rateip = document.createElement('input');
-  rateip.setAttribute('type','text');
+  rateip.setAttribute('type','number');
   rateip.setAttribute('name','rate');
   rateip.setAttribute('id','rate');
+  rateip.setAttribute('min',0);
+  rateip.setAttribute('max',5);
+  rateip.setAttribute('required','');
   rateip.setAttribute('value','');
 
   const commentslabel = document.createElement('label');
@@ -38,26 +43,44 @@ const form = document.createElement('form');
   commentsip.setAttribute('rows',4);
   commentsip.setAttribute('id','comments');
   commentsip.setAttribute('value','');
+  commentsip.setAttribute('required','');
 
-  const submitBtn = document.createElement('button');
-  submitBtn.innerHTML='Submit';
+  const submitBtn = document.createElement('input');
+  submitBtn.setAttribute('type','submit');
+  submitBtn.innerHTML = 'Submit';
+
   submitBtn.addEventListener('click',function(e){
     e.preventDefault();
     let id = self.restaurant.id;
     let name = document.getElementById('name').value;
     let rate = document.getElementById('rate').value;
     let comments = document.getElementById('comments').value;
+    document.getElementById('name').value='';
+    document.getElementById('rate').value='';
+    document.getElementById('comments').value='';
     var reqObj = {
-      'restaurant_id':id,
-      'name':name,
-      'rating':rate,
-      'comments':comments
+      restaurant_id:id,
+      name:name,
+      rating:rate,
+      comments:comments
     };
-    console.log('new post..',reqObj);
-    DBHelper.fetchPostReview(reqObj)
-    .then(response=> {review=response; createReviewHTML(review);})
-    .catch(err => console.log(err));
+    if(name!='' && rate!=='' && comments!=''){
+      let container = document.getElementById('reviews-container');
+      let revList = document.getElementById('reviews-list');
+      container.removeChild(form);
+      container.removeChild(container.firstElementChild);
+      while(revList.firstChild)
+      {
+        revList.removeChild(revList.firstChild);
+      }
+
+      DBHelper.fetchPostReview(reqObj).then(response=> {
+          var review = response;
+          return review;
+      }).then(review => fillReviewsHTML()).catch(err => console.log(err));
+  }else return false;
   });
+
 
   form.appendChild(namelabel);
   form.appendChild(nameip);
@@ -77,7 +100,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchRestaurantFromURL();
 });
 
-
+// resetRestaurantHtml = (restaurant) => {
+//   // Remove all restaurants
+//   self.restaurant = [];
+//   fetchRestaurantFromURL();
+// }
 /**
  * Get current restaurant from page URL.
  */
@@ -148,6 +175,32 @@ initMap = () => {
 fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
+
+  const favIcon = document.getElementById('favorite');
+  if(restaurant['is_favorite']==='true'){
+    favIcon.setAttribute('class',fasClass);
+  }else{
+    favIcon.setAttribute('class',farClass);
+  }
+  favIcon.addEventListener('click',function(e){
+    var cs = e.target.getAttribute('class');
+    var restaurantId = restaurant.id;
+    var isFav;
+    if(cs.indexOf('fas')>=0){
+        e.target.setAttribute('class',farClass);
+        isFav='false';
+    }else {
+        e.target.setAttribute('class',fasClass);
+        isFav='true';
+    }
+    DBHelper.fetchUpdateFavorite(restaurantId,isFav).then(response =>{
+      if(response.ok){
+        self.restaurant = response;
+        fillRestaurantHTML();
+      }
+    }).catch(err => console.log(err));
+  })
+
 
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
@@ -224,7 +277,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (id=self.restaurant.id) => { 
+fillReviewsHTML = (id=self.restaurant.id) => {
   DBHelper.fetchReviews(id)
   .then(response => {
     const reviews = response;
@@ -240,14 +293,14 @@ fillReviewsHTML = (id=self.restaurant.id) => {
     });
     container.appendChild(ul);
   }).catch(err => console.error(err));
-  
+
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h2');
   title.innerHTML = 'Reviews';
   container.appendChild(title);
 
   const addReview = document.createElement('button');
-  addReview.innerHTML = 'Add Review';
+  addReview.innerHTML = 'Add New Review';
   addReview.addEventListener('click',function(e){
       event.preventDefault();
     container.insertBefore(form,document.querySelector('#reviews-list'));
@@ -259,14 +312,14 @@ fillReviewsHTML = (id=self.restaurant.id) => {
 /**
  * Create review HTML and add it to the webpage.
  */
-createReviewHTML = (review) => {
+createReviewHTML = (review) => { //console.log(typeof review, review);
   const li = document.createElement('li');
   const name = document.createElement('p');
   name.innerHTML = review.name;
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = review.createdAt;
+  date.innerHTML = ((review.createdAt+'').indexOf('-')>=0)?review.createdAt:new Date(review.createdAt * 1000).toUTCString();
   li.appendChild(date);
 
   const rating = document.createElement('p');
