@@ -154,10 +154,12 @@ createRestaurantHTML = (restaurant) => {
   const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   li.append(name);
+
   const favIcon = document.createElement('input');
   favIcon.setAttribute('type','checkbox');
   favIcon.setAttribute('name','favorite');
-  //favIcon.setAttribute('id','favorite');
+  favIcon.setAttribute('title','select this if '+restaurant.name+' is your favorite');
+  favIcon.setAttribute('aria-label',"to mark if its your favorite");
   if(restaurant['is_favorite']==='true'){
     favIcon.setAttribute('class',fasClass);
   }else{

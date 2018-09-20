@@ -47,14 +47,19 @@ const form = document.createElement('form');
 
   const submitBtn = document.createElement('input');
   submitBtn.setAttribute('type','submit');
+  submitBtn.setAttribute('id','submitReview');
   submitBtn.innerHTML = 'Submit';
 
   submitBtn.addEventListener('click',function(e){
     e.preventDefault();
     let id = self.restaurant.id;
-    let name = document.getElementById('name').value;
+    let name = document.getElementById('name').value.trim();
     let rate = document.getElementById('rate').value;
-    let comments = document.getElementById('comments').value;
+    let comments = document.getElementById('comments').value.trim();
+    if(rate>5) {alert('rate between 0 - 5');
+    document.getElementById('rate').value='';
+    document.getElementById('rate').focus();
+    return false};
     document.getElementById('name').value='';
     document.getElementById('rate').value='';
     document.getElementById('comments').value='';
@@ -100,11 +105,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchRestaurantFromURL();
 });
 
-// resetRestaurantHtml = (restaurant) => {
-//   // Remove all restaurants
-//   self.restaurant = [];
-//   fetchRestaurantFromURL();
-// }
 /**
  * Get current restaurant from page URL.
  */
@@ -120,7 +120,6 @@ fetchRestaurantFromURL = () => {
     DBHelper.fetchRestaurantById(id)
       .then(restaurant =>{
         self.restaurant = restaurant;
-        //console.log(self.restaurant);
         initMap();
         fillRestaurantHTML();
       //callback(null, restaurant)
@@ -300,11 +299,13 @@ fillReviewsHTML = (id=self.restaurant.id) => {
   container.appendChild(title);
 
   const addReview = document.createElement('button');
-  addReview.innerHTML = 'Add New Review';
+  addReview.innerHTML = '+';
+  addReview.title="Add New Review";
   addReview.addEventListener('click',function(e){
       event.preventDefault();
     container.insertBefore(form,document.querySelector('#reviews-list'));
     container.removeChild(addReview);
+    document.getElementById('name').focus();
   });
   container.appendChild(addReview);
 }
@@ -319,7 +320,7 @@ createReviewHTML = (review) => { //console.log(typeof review, review);
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = ((review.createdAt+'').indexOf('-')>=0)?review.createdAt:new Date(review.createdAt * 1000).toUTCString();
+  date.innerHTML = (review.createdAt)?((review.createdAt+'').indexOf('-')>=0)?review.createdAt:new Date(review.createdAt * 1000).toUTCString():new Date();
   li.appendChild(date);
 
   const rating = document.createElement('p');

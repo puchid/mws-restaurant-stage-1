@@ -16,7 +16,6 @@ var urlsToCache = [
 var CACHE_VERSION = 1;
 
 var DB_VERSION = 1;
-var STOP_RETRYING_AFTER = 86400000; // One day, in milliseconds.
 var DB_NAME='restaurantsDB';
 var DB_STORE = 'restaurantStore';
 var REVIEWS_STORE ='reviewsStore';
@@ -70,41 +69,56 @@ self.addEventListener('activate', function(event) {
   );
 });
 
-// function replayPendingPosts()
-// {
-//   console.log('replaying pending requests...');
-//   if(navigator.onLine && store.count()>0){
-//     let tx = _db.transaction(POST_UNRESOLVED_STORE,'readonly');
-//     let store = tx.objectStore(POST_UNRESOLVED_STORE);
-//     let indx = store.index('postreviewIndex');
-//     return indx.getAll().then(posts => {
-//       posts.forEach(post => {
-//         let postUrl = 'http://localhost:1337/reviews/';
-//         let headers = new Headers();
-//         headers.append('content-type','application/json');
-//         let nRequest = new Request(postUrl,{method:'POST',headers:headers,body:post});
-//         return fetch(nRequest).then(response => {
-//           if(response.ok)
-//           {
-//             store.delete(post);
-//           }
-//         }).catch(err => err);
-//       });
-//     });
-//   }
-// }
-//
-// setTimeout(replayPendingPosts,3000);
+self.replayPendingPosts = () =>
+{
+    dbPromise().then(db =>{
+      let tx = db.transaction(POST_UNRESOLVED_STORE,'readonly');
+      let store = tx.objectStore(POST_UNRESOLVED_STORE);
+      let indx = store.index('postreviewIndex');
+        store.openCursor().then(cursor => {
+          if (cursor) {
+          let url = 'http://localhost:1337/reviews/';
+          let method = 'POST';
+          let body = JSON.stringify(cursor.value);
+          return fetch(url,{method:method,body:body}).then(response =>{
+            if(!response.ok)
+            {
+              return;
+            }
+            return response;
+          }).then(response => {
+            dbPromise().then(db =>{
+              let tx = db.transaction(POST_UNRESOLVED_STORE,'readwrite');
+              let store = tx.objectStore(POST_UNRESOLVED_STORE);
+              store.openCursor().then(cursor =>{
+                cursor.delete().then(() => new Response('tried resubmitting pending requests',{status:200}));
+              }).then(() => replayPendingPosts());
+            });
+          });
+        }
+        else { return new Response('attempt successfull',{status:200});}
+        }).catch(error => {
+          console.log("Error reading cursor");
+          return;
+        });
+    });
+}
+
 
 self.addEventListener('fetch', function(event) {
-//  console.log(Notification.permission);
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
         if (response) {
           return response;
         }
-        else if((event.request.method==='PUT') && (event.request.url.indexOf('/restaurants/')>=0) && (event.request.url.indexOf('?is_favorite')>=0)){
+        else if(event.request.url.indexOf('pending')>=0)
+        {
+          self.replayPendingPosts();
+          return new Response('submitted pending requests..',{status:200});
+        }
+        else if((event.request.method==='PUT') && (event.request.url.indexOf('/restaurants/')>=0) && (event.request.url.indexOf('?is_favorite')>=0))
+        {
           let req = event.request;
           if(navigator.onLine)
           {
@@ -121,24 +135,24 @@ self.addEventListener('fetch', function(event) {
               }).then(content => {
                   let tx = _db.transaction(DB_STORE,"readwrite");
                   let str = tx.objectStore(DB_STORE);
-                  let val = req.url.split('/')[5].substring(13);
-                  let obj = str.get(id);
-                  obj.onsuccess = function(e){
-                    let resultObj = obj.result;
-                    return resultObj;
-                  }
-                  obj.then(resObj =>{
-                  resObj['is_favorite']= val;
-                  str.put(resObj);
-                  return resObj;
-                }).then(obj => {
-                  return new Response(JSON.stringify(obj));
-                });
-              }).catch(err =>  new Response("not connected...", {status: 404}));
+                  str.delete(id);
+                  str.put({id:content.id,data:content});
+                  return content;
+                }).then(updatedResObj => new Response(JSON.stringify(updatedResObj)))
+                .catch(err =>  new Response("not connected...", {status: 404}));
+                //   obj.then(resObj =>{
+                //     let tx = _db.transaction(DB_STORE,"readwrite");
+                //     let str = tx.objectStore(DB_STORE);
+                //     str.delete(id);
+                //     str.put({id:content.id,data:content});
+                //   return content;
+                // }).then(obj => {
+                //   return new Response(JSON.stringify(obj));
+                // });
         }
       }else if((event.request.method==='POST') && (event.request.url.indexOf('/reviews/')>=0))
             {
-              let req = event.request;  //console.log('req json....',req.json());
+              let req = event.request;
               if(navigator.onLine){
                 return fetch(req).then(response =>{
                   if(response.ok)
@@ -161,14 +175,6 @@ self.addEventListener('fetch', function(event) {
                     //tx.complete;
                     return reqbody;
                   }).then(req => new Response(JSON.stringify(req),{status:202}));
-                    // console.log(Notification.permission);
-                    // Notification.requestPermission().then(permission => {
-                    // if(permission==="granted")
-                    //   new Notification('not connected at the moment; will process the same once connected..');
-
-                    //console.log('not connected at the moment; will process the same once connected.');
-
-                //});
               }
         }
        else if(event.request.url.indexOf('/restaurants')>=0)
@@ -186,7 +192,6 @@ self.addEventListener('fetch', function(event) {
                 let tx = _db.transaction(DB_STORE,'readwrite');
                 let keyValStore = tx.objectStore(DB_STORE);
                 keyValStore.put({id:id,data:content});
-                //console.log(content);
                 tx.complete;
                 return content;
               } )
@@ -230,12 +235,10 @@ self.addEventListener('fetch', function(event) {
                   let tx = _db.transaction(POST_UNRESOLVED_STORE,'readwrite');
                   let keyValStore = tx.objectStore(POST_UNRESOLVED_STORE);
                   let index =keyValStore.index('postreviewIndex');
-                  console.log(index.count(fetchReview4RestId));
                 return index.count(fetchReview4RestId).then(count => {
                   if(count>0){
                     return index.getAll(fetchReview4RestId).then(newPosts => {
                       var posts = newPosts;
-                      console.log(posts);
                     var finalReviews = content.concat(posts);
                     return finalReviews;
                     });
@@ -251,7 +254,6 @@ self.addEventListener('fetch', function(event) {
                 let index1 = keyValStore1.index('reviewIndex');
                 return index1.getAll(fetchReview4RestId).then(items => {
                   var revs = items;
-                  console.log(revs);
                   let tx = _db.transaction(POST_UNRESOLVED_STORE,'readwrite');
                   let keyValStore = tx.objectStore(POST_UNRESOLVED_STORE);
                   let index =keyValStore.index('postreviewIndex');
@@ -259,7 +261,6 @@ self.addEventListener('fetch', function(event) {
                   if(count>0){
                     return index.getAll(fetchReview4RestId).then(newPosts => {
                       var posts = newPosts;
-                      console.log(posts);
                     var finalReviews = revs.concat(posts);
                     return new Response(JSON.stringify(finalReviews));
                     });

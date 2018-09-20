@@ -33,11 +33,15 @@ class DBHelper {
       return `http://localhost:${port}/restaurants/`;
     }
 
+  static retryPending(event){
+    fetch('http://localhost:1337/pending').then(response =>{
+        return new Response("tried resubmitting pending requests..",{status:200});
+      }).catch(err => console.log(err));
+    }
 
-static fetchUpdateFavorite(id,isFav)
-{ let url = DBHelper.FAVORITE_URL+id+'/?is_favorite='+isFav;
-  console.log(id,isFav,url);
-  return fetch(url,{method:'PUT'})
+ static fetchUpdateFavorite(id,isFav)
+{
+  return fetch(DBHelper.FAVORITE_URL+id+'/?is_favorite='+isFav,{method:'PUT'})
   .then(response =>{
     if(response.ok)
     {
@@ -60,13 +64,13 @@ static fetchUpdateFavorite(id,isFav)
         return res;
       }
     }).then(respArr => {
-      respArr.forEach(res => {
-        if(res.name=='Casa Enrique'){
+        respArr.forEach(res => {
+        if(res.name==='Casa Enrique'){
           res.photograph = 10;
-      }
-    });
+          }
+        });
         return respArr;
-    }).catch((err) => console.log(err));
+    }).then(restaurants => restaurants).catch((err) => console.log(err));
    }
     /**
    * Fetch a restaurant by its ID.
@@ -79,8 +83,12 @@ static fetchUpdateFavorite(id,isFav)
           const restaurant = response.json();
           return (restaurant);
         }
-      }).then(restaurant => restaurant)
-      .catch(err => { // Restaurant does not exist in the database
+      }).then(restaurant => {
+        if(restaurant.name==='Casa Enrique'){
+          restaurant.photograph=10;
+        }
+        return restaurant;
+      }).catch(err => { // Restaurant does not exist in the database
           console.log('Restaurant does not exist', err);
       });
   }
@@ -225,3 +233,6 @@ static fetchPostReview(data){
   } */
 
 }
+
+
+window.addEventListener('online', DBHelper.retryPending);
